@@ -1,0 +1,95 @@
+.camera-feed {
+  position: relative;
+  height: 440px;
+  background: #101014;
+  overflow: hidden;
+}
+.camera-feed img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.camera-feed canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.feed-message {
+  padding: 32px;
+  text-align: center;
+  color: #bab3c4;
+  font-size: 14px;
+}
+.camera-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.camera-actions button {
+  background: #39313f;
+  border: 1px solid #665b70;
+  border-radius: 6px;
+  padding: 9px 11px;
+  color: #fff;
+  cursor: pointer;
+}
+.camera-status-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 10px;
+}
+.camera-status-card p {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.camera-status-card button {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  background: var(--card2);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.camera-status-card button:first-of-type {
+  margin-left: auto;
+}
+.decision-row {
+  display: flex;
+  gap: 8px;
+}
+.decision-row button {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card2);
+  padding: 10px;
+  cursor: pointer;
+}
+.source-badge {
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--amber);
+  border-radius: 4px;
+  color: var(--amber);
+}
+@media (max-width: 760px) {
+  .camera-feed {
+    height: 300px;
+  }
+  .camera-status-card {
+    flex-wrap: wrap;
+  }
+  .camera-status-card > div {
+    width: 100%;
+  }
+  .camera-status-card button:first-of-type {
+    margin-left: 0;
+  }
+}

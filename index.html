@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MIRA | Rover command</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="camera.css" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">M</span
+          ><span>MIRA<small>ROVER COMMAND</small></span>
+        </div>
+        <nav aria-label="Primary navigation">
+          <button
+            class="nav-item active"
+            data-screen="home"
+            aria-label="Overview"
+          >
+            <span>⌂</span> Overview
+          </button>
+          <button class="nav-item" data-screen="live" aria-label="Live Mission">
+            <span>◉</span> Live Mission
+          </button>
+          <button class="nav-item" data-screen="map" aria-label="Tunnel Map">
+            <span>⌘</span> Tunnel Map
+          </button>
+          <button
+            class="nav-item"
+            data-screen="history"
+            aria-label="Mission History"
+          >
+            <span>◷</span> Mission History
+          </button>
+          <button
+            class="nav-item"
+            data-screen="rover"
+            aria-label="Rover Connection"
+          >
+            <span>▣</span> Rover Connection
+          </button>
+          <button
+            class="nav-item"
+            data-screen="incidents"
+            aria-label="AI Incidents"
+            hidden
+          >
+            <span>!</span> AI Incidents
+          </button>
+        </nav>
+        <div class="sidebar-footer">
+          <span id="side-status">Rover not linked</span
+          ><small id="side-detail">Connection required</small>
+        </div>
+      </aside>
+      <main>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">SURFACE / OPERATOR STATION</p>
+            <h1 id="page-title">Command overview</h1>
+          </div>
+          <div class="top-actions">
+            <span class="connection" id="connection-status">Not connected</span
+            ><button
+              class="icon-button"
+              id="theme-toggle"
+              aria-label="Toggle colour theme"
+            >
+              ◐
+            </button>
+          </div>
+        </header>
+        <p id="storage-error" role="alert" hidden></p>
+        <section class="screen active" id="home">
+          <div class="setup-card">
+            <div>
+              <p class="eyebrow">ESP32 DEVKIT V1</p>
+              <h2>Rover command station</h2>
+              <p>
+                Movement, live camera and visual observations in one workspace.
+              </p>
+            </div>
+            <button class="primary" id="start-test">Connect rover</button>
+          </div>
+          <div class="mission-bar">
+            <div>
+              <p class="eyebrow">CURRENT MISSION</p>
+              <h2 id="mission-name">No active mission</h2>
+              <p id="mission-description">Connect the rover to begin.</p>
+            </div>
+            <button class="primary" id="mission-action">Connect rover →</button>
+          </div>
+          <div class="camera-status-card">
+            <div>
+              <strong>Rover camera</strong>
+              <p id="camera-detail">Waiting for rover connection</p>
+            </div>
+            <button class="open-camera">Open camera</button
+            ><button id="end-session" hidden>End mission</button>
+          </div>
+          <div class="stat-grid">
+            <article class="stat-card">
+              <p>Obstacle status</p>
+              <h3 id="safety-status">Awaiting data</h3>
+              <small>Ultrasonic observation only</small>
+            </article>
+            <article class="stat-card">
+              <p>Battery</p>
+              <h3 id="battery-status">—</h3>
+              <div class="bar"><i id="battery-bar" style="width: 0%"></i></div>
+              <small id="battery-detail">No reading received</small>
+            </article>
+            <article class="stat-card">
+              <p>Signal</p>
+              <h3 id="network-status">—</h3>
+              <small id="network-detail">No reading received</small>
+            </article>
+            <article class="stat-card">
+              <p>Pending observations</p>
+              <h3 id="alert-count">0</h3>
+              <small id="alert-detail">Awaiting operator review</small>
+            </article>
+          </div>
+          <div class="section-heading">
+            <h2>Recent missions</h2>
+            <button class="text-button" data-screen="history">
+              View history →
+            </button>
+          </div>
+          <div class="mission-grid" id="recent-missions"></div>
+        </section>
+        <section class="screen" id="live">
+          <div class="workspace-status">
+            <span id="live-link">ROVER OFFLINE</span
+            ><span id="relay-route">Relay: not reported</span
+            ><span id="frame-time">No analysed frame</span>
+          </div>
+          <div class="live-layout" id="live-workspace">
+            <div class="camera-panel">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">01 / CAMERA</p>
+                  <h2>Forward view</h2>
+                </div>
+                <div class="camera-actions">
+                  <button class="open-camera">Reconnect camera</button
+                  ><button id="expand-camera" aria-pressed="false">
+                    Expand workspace
+                  </button>
+                </div>
+              </div>
+              <div class="camera-feed">
+                <p class="feed-message">
+                  Connect the rover to start the camera.
+                </p>
+              </div>
+              <div class="camera-bottom">
+                <span id="video-state">NO STREAM</span><span>ESP32-CAM</span>
+              </div>
+            </div>
+            <aside class="ai-card">
+              <p class="eyebrow">02 / YOLOv8 OBSERVATIONS</p>
+              <h2>Awaiting analysis</h2>
+              <p>Connect the rover camera to receive observations.</p>
+              <div class="confidence">
+                <span>Highest confidence</span><strong>—</strong>
+              </div>
+              <div class="bar"><i style="width: 0%"></i></div>
+              <div id="detection-list" class="detection-list">
+                <p>No objects detected yet.</p>
+              </div>
+              <p id="fusion-state">
+                Visual observations require operator review.
+              </p>
+              <div id="live-decisions" class="live-decisions"></div>
+              <button class="text-button" data-screen="incidents">
+                All incident records →
+              </button>
+              <div class="mark-grid">
+                <button data-marker="rubble">Rubble</button
+                ><button data-marker="blocked">Blocked</button
+                ><button data-marker="clear">Clear note</button
+                ><button data-marker="environment">Environment</button>
+              </div>
+            </aside>
+            <section class="drive-panel" aria-label="Rover movement controls">
+              <div class="drive-heading">
+                <p class="eyebrow">03 / MANUAL CONTROL</p>
+                <h2>Rover movement</h2>
+                <p>Hold a direction or an arrow key. Release to stop.</p>
+                <label class="arm-control"
+                  ><input id="arm-controls" type="checkbox" disabled /> Enable
+                  movement</label
+                >
+              </div>
+              <div class="drive-pad">
+                <button
+                  data-drive="F"
+                  class="forward"
+                  aria-label="Forward"
+                  disabled
+                >
+                  ↑<small>Forward</small></button
+                ><button data-drive="L" class="left" aria-label="Left" disabled>
+                  ←<small>Left</small></button
+                ><button data-drive="S" class="stop" aria-label="Stop rover">
+                  ■<small>Stop</small></button
+                ><button
+                  data-drive="R"
+                  class="right"
+                  aria-label="Right"
+                  disabled
+                >
+                  →<small>Right</small></button
+                ><button
+                  data-drive="B"
+                  class="backward"
+                  aria-label="Backward"
+                  disabled
+                >
+                  ↓<small>Backward</small>
+                </button>
+              </div>
+              <div class="command-state">
+                <span>LAST COMMAND</span
+                ><strong id="drive-status" role="status">Not connected</strong
+                ><small id="drive-detail"
+                  >Controls unlock when the rover confirms its control
+                  protocol.</small
+                >
+              </div>
+            </section>
+          </div>
+          <section class="sensors">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">04 / TELEMETRY</p>
+                <h2>Sensor readings</h2>
+                <p id="sensor-message">
+                  Connect the rover, then send a movement command.
+                </p>
+              </div>
+              <span id="sensor-origin" class="source-badge" hidden
+                >Generated preview</span
+              >
+            </div>
+            <div class="sensor-grid">
+              <div>
+                <span>Ultrasonic · HC-SR04</span
+                ><strong data-sensor="distance_cm">—</strong
+                ><small>Distance in cm</small>
+              </div>
+              <div>
+                <span>Tilt · MPU6050</span
+                ><strong data-sensor="tilt_deg">—</strong><small>Degrees</small>
+              </div>
+              <div>
+                <span>CO · gas sensor</span
+                ><strong data-sensor="co_ppm">—</strong
+                ><small>Parts per million</small>
+              </div>
+              <div>
+                <span>Motion · RCWL-0516</span
+                ><strong data-sensor="radar">—</strong
+                ><small>Microwave motion</small>
+              </div>
+              <div>
+                <span>PIR</span><strong data-sensor="pir">—</strong
+                ><small>Infrared motion</small>
+              </div>
+              <div>
+                <span>Battery</span><strong data-sensor="battery_pct">—</strong
+                ><small>Reported charge</small>
+              </div>
+            </div>
+          </section>
+          <article class="timeline">
+            <h2>Incident timeline</h2>
+            <div id="timeline-items"></div>
+          </article>
+        </section>
+        <section class="screen" id="rover">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">CONNECTION</p>
+              <h2>Rover &amp; camera</h2>
+              <p>Choose the rover link and its ESP32-CAM stream.</p>
+            </div>
+            <label class="theme-switch"
+              >Dark mode <input type="checkbox" id="theme-switch" /><span></span
+            ></label>
+          </div>
+          <form id="rover-form" class="connection-form">
+            <label
+              >Rover link<select id="transport">
+                <option value="serial">
+                  USB Serial · ESP32 / relay receiver
+                </option>
+                <option value="websocket">Wi-Fi · WebSocket</option>
+              </select></label
+            ><label id="socket-field" hidden
+              >WebSocket address<input
+                id="socket-url"
+                type="url"
+                placeholder="ws://192.168.1.50:81/" /></label
+            ><label id="baud-field"
+              >Serial baud rate<select id="baud">
+                <option>115200</option>
+                <option>9600</option>
+              </select></label
+            ><label
+              >ESP32-CAM stream address<input
+                id="camera-url"
+                type="url"
+                placeholder="http://192.168.1.51:81/stream"
+                required
+            /></label>
+            <details>
+              <summary>Analysis &amp; sensor options</summary>
+              <label
+                >YOLO service address<input
+                  id="ai-url"
+                  type="url"
+                  value="http://127.0.0.1:8000" /></label
+              ><label
+                >Obstacle threshold (cm)<input
+                  id="obstacle-threshold"
+                  type="number"
+                  value="25"
+                  min="1"
+                  max="500" /></label
+              ><label class="check-row"
+                ><input id="preview-sensors" type="checkbox" /> Preview missing
+                sensor readings<small
+                  >Generated readings are marked; received readings always take
+                  priority.</small
+                ></label
+              >
+            </details>
+            <p id="rover-message" role="status">
+              Ready to connect. Close Arduino Serial Monitor before using USB
+              Serial.
+            </p>
+            <div class="form-actions">
+              <button class="primary" id="connect-rover" type="submit">
+                Connect rover</button
+              ><button id="disconnect-rover" type="button" disabled>
+                Disconnect
+              </button>
+            </div>
+          </form>
+          <article class="connection-summary">
+            <h3>Connection path</h3>
+            <p id="connection-path">Operator → no rover connected</p>
+            <p id="rover-freshness">Waiting for the first telemetry packet.</p>
+            <p id="firmware-status">
+              Motor controls require the MIRA command acknowledgement and
+              watchdog handshake.
+            </p>
+          </article>
+          <p class="connection-help">
+            The camera starts automatically when rover telemetry arrives. The
+            relay path is shown when the receiver reports it.
+            <a href="ROVER_PROTOCOL.md" target="_blank" rel="noopener"
+              >Firmware connection guide ↗</a
+            >
+          </p>
+        </section>
+        <section class="screen" id="map">
+          <div class="map-header">
+            <div>
+              <p class="eyebrow">OPERATOR NOTES</p>
+              <h2>Tunnel map</h2>
+            </div>
+            <div class="map-tools">
+              <button id="zoom-out" aria-label="Zoom out">−</button
+              ><button id="zoom-in" aria-label="Zoom in">+</button
+              ><button id="recenter">Recenter</button>
+            </div>
+          </div>
+          <div class="map-layout">
+            <div class="map-canvas" id="map-canvas">
+              <div class="grid-lines"></div>
+              <p id="map-note"></p>
+              <div id="map-markers"></div>
+            </div>
+            <aside class="map-sidebar">
+              <h3>Map notes</h3>
+              <p>
+                Operator markers are unlocated until positioning data is
+                available.
+              </p>
+              <ul class="legend">
+                <li><i class="lg-rubble"></i>Possible rubble</li>
+                <li><i class="lg-blocked"></i>Blocked route</li>
+                <li><i class="lg-env"></i>Environment</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+        <section class="screen" id="history">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SAVED RECORDS</p>
+              <h2>Mission history</h2>
+            </div>
+            <button id="export-records" class="report">Export records</button>
+          </div>
+          <div class="history-list" id="history-list"></div>
+        </section>
+        <section class="screen" id="incidents">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">OPERATOR REVIEW</p>
+              <h2>AI incidents</h2>
+              <p>Confirmations are saved in the map and timeline.</p>
+            </div>
+          </div>
+          <div class="history-list" id="incident-list"></div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="state.js"></script>
+    <script src="app.js"></script>
+    <script src="rover.js"></script>
+    <script src="camera.js"></script>
+  </body>
+</html>

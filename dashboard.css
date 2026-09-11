@@ -1,0 +1,536 @@
+/* Operator console: shared palette, compact surfaces, tabular readings. */
+body {
+  font-size: 16px;
+}
+body.dark {
+  --bg: #17161b;
+  --panel: #222128;
+  --card: #2a2831;
+  --card2: #27252e;
+  --ink: #edeaf0;
+  --muted: #b2acba;
+  --line: #3c3844;
+  --lav: #c4b1da;
+  --green: #98b6a3;
+}
+.text-button {
+  color: var(--lav);
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  color: var(--ink);
+}
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+.app-shell {
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+main {
+  padding: 0 28px 40px;
+  max-width: 1800px;
+}
+.topbar {
+  height: 96px;
+}
+.brand small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  margin-top: 5px;
+  color: #aaa0b3;
+}
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  font-size: 20px;
+}
+.sidebar-footer {
+  font-size: 13px;
+}
+.sidebar-footer small {
+  display: block;
+  margin-top: 7px;
+}
+.nav-item {
+  font-size: 14px;
+}
+.nav-item span {
+  font-size: 19px;
+}
+.setup-card {
+  padding: 8px 0 26px;
+}
+.setup-card h2 {
+  font-size: 24px;
+}
+.setup-card p,
+.mission-bar p {
+  font-size: 14px;
+}
+.mission-bar,
+.stat-card {
+  border-radius: 10px;
+}
+.stat-grid {
+  margin-bottom: 24px;
+}
+.workspace-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 12px 0 18px;
+  font:
+    12px ui-monospace,
+    monospace;
+  color: var(--muted);
+}
+.workspace-status span:first-child {
+  color: var(--ink);
+}
+.live-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(310px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.camera-panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-width: 0;
+}
+.panel-head {
+  padding: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.panel-head .eyebrow {
+  color: #b9b0c1;
+}
+.panel-head h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.camera-actions button {
+  font-size: 13px;
+}
+.ai-card {
+  display: block;
+  padding: 20px;
+  border-radius: 10px;
+  min-width: 0;
+}
+.ai-card h2 {
+  font-size: 24px;
+  color: var(--ink);
+}
+.ai-card p {
+  font-size: 14px;
+}
+.confidence {
+  margin-top: 16px;
+  font-size: 14px;
+}
+.detection-list {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 12px;
+  max-height: 190px;
+  overflow: auto;
+}
+.detection-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.detection-row strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--lav);
+}
+.live-decisions {
+  max-height: 210px;
+  overflow: auto;
+}
+.live-decisions article {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.live-decisions p {
+  margin: 0 0 8px;
+}
+.decision-row {
+  margin: 8px 0;
+}
+.decision-row button {
+  font-size: 13px;
+  min-height: 40px;
+}
+.mark-grid {
+  margin-top: 16px;
+}
+.mark-grid button {
+  font-size: 13px;
+}
+.drive-panel {
+  grid-column: 1/-1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 22px;
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  box-shadow: 0 8px 24px #0002;
+}
+.drive-heading h2 {
+  font-size: 18px;
+}
+.drive-heading p {
+  max-width: 270px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.arm-control {
+  font-size: 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.arm-control input {
+  accent-color: var(--lav);
+  width: 18px;
+  height: 18px;
+}
+.drive-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 76px);
+  grid-template-rows: repeat(3, 46px);
+  gap: 5px;
+  flex-shrink: 0;
+}
+.drive-pad button {
+  touch-action: none;
+  user-select: none;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card2);
+  font-size: 21px;
+  line-height: 1;
+  cursor: pointer;
+  margin: 0;
+  width: auto;
+}
+.drive-pad button small {
+  display: block;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.drive-pad .forward {
+  grid-area: 1/2;
+}
+.drive-pad .left {
+  grid-area: 2/1;
+}
+.drive-pad .stop {
+  grid-area: 2/2;
+  background: #783f44;
+  color: white;
+  border-color: #a55d62;
+}
+.drive-pad .right {
+  grid-area: 2/3;
+}
+.drive-pad .backward {
+  grid-area: 3/2;
+}
+.drive-pad button.held {
+  background: #705a87;
+  color: #fff;
+  border-color: #c4b1da;
+}
+.command-state {
+  width: 210px;
+  min-width: 0;
+}
+.command-state span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.command-state strong {
+  display: block;
+  font-size: 16px;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.command-state small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.sensors {
+  margin: 18px 0;
+  border-radius: 10px;
+}
+.sensors .section-heading {
+  align-items: center;
+}
+.sensors .section-heading p {
+  font-size: 13px;
+}
+.sensor-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.sensor-grid div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  padding: 13px 10px;
+  border-radius: 7px;
+}
+.sensor-grid span {
+  font-size: 12px;
+  min-height: 32px;
+}
+.sensor-grid strong {
+  font:
+    600 20px ui-monospace,
+    monospace;
+  display: block;
+}
+.sensor-grid small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 8px;
+}
+.sensor-grid [data-generated="true"]::after {
+  content: "preview";
+  display: block;
+  font:
+    11px ui-sans-serif,
+    system-ui;
+  color: var(--amber);
+  margin-top: 5px;
+}
+.timeline {
+  border-radius: 10px;
+  margin-top: 16px;
+}
+.event {
+  font-size: 13px;
+}
+.connection-form {
+  display: grid;
+  gap: 18px;
+  max-width: 780px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 10px;
+}
+.connection-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.connection-form input:not([type="checkbox"]),
+.connection-form select {
+  color: var(--ink);
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 11px;
+  width: 100%;
+  min-width: 0;
+}
+.connection-form input[type="checkbox"] {
+  accent-color: var(--lav);
+}
+.connection-form details {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.connection-form details label {
+  margin-top: 16px;
+}
+.connection-form summary {
+  font-size: 14px;
+  cursor: pointer;
+}
+.connection-form small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.connection-form .check-row {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+.check-row small {
+  grid-column: 2;
+}
+.form-actions {
+  display: flex;
+  gap: 12px;
+}
+.form-actions button {
+  padding: 12px 18px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.form-actions button:not(.primary) {
+  background: var(--card2);
+}
+#rover-message {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.connection-summary {
+  max-width: 780px;
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.connection-summary h3 {
+  font-size: 18px;
+}
+.connection-summary p,
+.connection-help {
+  font-size: 14px;
+}
+.connection-summary p:last-child {
+  margin-bottom: 0;
+}
+.connection-help {
+  margin-top: 18px;
+  max-width: 780px;
+}
+.connection-help a {
+  color: var(--lav);
+}
+.live-layout.camera-expanded {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.camera-expanded .camera-feed {
+  height: min(60dvh, 680px);
+}
+.camera-expanded .ai-card {
+  min-height: min(60dvh, 680px);
+}
+body.workspace-expanded .sidebar {
+  display: none;
+}
+body.workspace-expanded .app-shell {
+  grid-template-columns: 1fr;
+}
+body.workspace-expanded main {
+  max-width: none;
+}
+@media (max-width: 1100px) {
+  .app-shell {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+  .brand > span:last-child,
+  .nav-item {
+    font-size: 0;
+  }
+  .nav-item span {
+    font-size: 20px;
+  }
+  .brand {
+    margin: 0 auto 35px;
+  }
+  .sidebar-footer {
+    display: none;
+  }
+  .sensor-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .drive-panel {
+    gap: 14px;
+    padding: 16px;
+  }
+  .command-state {
+    width: 170px;
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  main {
+    padding: 0 14px 85px;
+  }
+  .topbar {
+    height: 86px;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  .live-layout,
+  .live-layout.camera-expanded {
+    grid-template-columns: 1fr;
+  }
+  .drive-panel {
+    flex-wrap: wrap;
+    position: relative;
+    bottom: auto;
+  }
+  .drive-heading {
+    flex: 1;
+    min-width: 140px;
+  }
+  .drive-pad {
+    grid-template-columns: repeat(3, 64px);
+  }
+  .command-state {
+    width: 100%;
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+  }
+  .command-state strong {
+    margin: 5px 0;
+  }
+  .camera-expanded .ai-card {
+    min-height: 0;
+  }
+  .camera-expanded .camera-feed {
+    height: 48dvh;
+    min-height: 240px;
+  }
+  .sensor-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sensors .section-heading {
+    align-items: flex-start;
+  }
+  .connection-form {
+    padding: 18px;
+  }
+  .camera-actions {
+    width: 100%;
+  }
+  .sidebar {
+    height: auto;
+  }
+  .brand {
+    display: none;
+  }
+}
