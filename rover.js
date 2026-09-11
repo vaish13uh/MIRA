@@ -118,7 +118,7 @@
   } catch {
     /* Settings are optional. */
   }
-  q("#transport").value = ["serial", "websocket"].includes(config.transport)
+  q("#transport").value = ["ble", "serial", "websocket"].includes(config.transport)
     ? config.transport
     : "serial";
   q("#baud").value = [9600, 115200].includes(Number(config.baud))
@@ -133,7 +133,7 @@
   function chooseTransport() {
     const serial = q("#transport").value === "serial";
     q("#socket-field").hidden = serial;
-    q("#socket-url").required = !serial;
+    q("#socket-url").required = q("#transport").value === "websocket";
     q("#baud-field").hidden = !serial;
   }
   q("#transport").onchange = chooseTransport;
@@ -157,7 +157,10 @@
   }
   async function send(text, resource = link) {
     if (!resource || resource !== link) return;
-    if (resource.socket) {
+    if (resource.ble) {
+      if (!resource.tx) throw Error("Bluetooth command channel is unavailable.");
+      await resource.tx.writeValue(new TextEncoder().encode(text + "\n"));
+    } else if (resource.socket) {
       if (
         resource.socket.readyState !== WebSocket.OPEN ||
         resource.socket.bufferedAmount > 1024
@@ -326,6 +329,8 @@
       };
       if (config.transport === "websocket")
         config.socket = validUrl(config.socket, ["ws:", "wss:"]);
+      if (config.transport === "ble" && !navigator.bluetooth)
+        throw Error("Bluetooth requires Chrome or Edge on HTTPS or localhost.");
       if (
         !Number.isFinite(config.threshold) ||
         config.threshold < 1 ||
@@ -358,7 +363,26 @@
     render();
     set("#rover-message", "Opening connection…");
     try {
-      if (config.transport === "serial") {
+      if (config.transport === "ble") {
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"] }],
+          optionalServices: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"],
+        });
+        resource.device = device;
+        resource.server = await device.gatt.connect();
+        const service = await resource.server.getPrimaryService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+        resource.tx = await service.getCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+        const rx = await service.getCharacteristic("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
+        await rx.startNotifications();
+        rx.addEventListener("characteristicvaluechanged", (event) => {
+          const text = new TextDecoder().decode(event.target.value);
+          text.split("\\n").filter(Boolean).forEach((line) => receive(line, resource));
+        });
+        device.addEventListener("gattserverdisconnected", () => {
+          if (resource === link) void disconnect("Interrupted", "Bluetooth rover disconnected.");
+        });
+        await send("HELLO", resource);
+      } else if (config.transport === "serial") {
         const port = await navigator.serial.requestPort();
         if (resource !== link) return;
         resource.port = port;
@@ -470,6 +494,7 @@
       resource.socket.onmessage = null;
       resource.socket.close();
     }
+    if (resource.device?.gatt?.connected) resource.device.gatt.disconnect();
     if (resource.port) {
       try {
         await stopping;
