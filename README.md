@@ -2,6 +2,7 @@
 
 **Project report | SIH25039**  
 AI-Powered Underground Mine Monitoring and Rescue-Support Rover
+Live dashboard: https://vaish13uh.github.io/MIRA/
 
 ## 1. Project Overview and Problem Statement
 
