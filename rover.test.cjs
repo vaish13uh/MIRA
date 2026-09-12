@@ -31,3 +31,12 @@ assert.notEqual(previewAt(10).distance_cm, previewAt(20).distance_cm);
 console.log(
   "PASS: CSV/JSON telemetry, units/ranges, missing values, handshake constraints, relay evidence, changing previews.",
 );
+// BLE firmware sends untyped JSON, unlike the Serial/WebSocket protocol.
+{
+  const check = require('node:assert/strict');
+  const decode = require('./rover.js').parse;
+  const packet = decode('{"dist":38.5,"pitch":2.1,"roll":-1.4}', true);
+  check.equal(packet.distance_cm, 38.5);
+  check.equal(packet.tilt_deg, 2.1);
+  check.equal(decode('{"dist":-1}', true), null);
+}

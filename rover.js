@@ -11,7 +11,7 @@
     pir: [0, 1],
     human: [0, 1],
   };
-  function parse(line) {
+  function parse(line, ble = false) {
     let packet;
     if (line.startsWith("DATA,")) {
       const parts = line.trim().split(",");
@@ -40,6 +40,9 @@
     }
     if (!packet || typeof packet !== "object" || Array.isArray(packet))
       return null;
+    if (ble && !packet.type && ["dist", "pitch", "roll"].some(key => key in packet)) {
+      packet = { ...packet, type: "telemetry", distance_cm: packet.dist, tilt_deg: packet.pitch };
+    }
     if (packet.type === "telemetry") {
       const clean = { type: "telemetry" };
       for (const [key, [low, high]] of Object.entries(ranges)) {
@@ -132,18 +135,19 @@
     : 25;
   function chooseTransport() {
     const serial = q("#transport").value === "serial";
-    q("#socket-field").hidden = serial;
+    q("#socket-field").hidden = q("#transport").value !== "websocket";
+    q("#camera-url").required = false;
     q("#socket-url").required = q("#transport").value === "websocket";
     q("#baud-field").hidden = !serial;
   }
   q("#transport").onchange = chooseTransport;
   chooseTransport();
-  function validUrl(value, protocols) {
+  function validUrl(value, protocols, requireSecure = true) {
     const url = new URL(value);
     if (!protocols.includes(url.protocol) || url.username || url.password)
       throw Error("Enter a valid address without embedded credentials.");
     if (
-      location.protocol === "https:" &&
+      requireSecure && location.protocol === "https:" &&
       ["http:", "ws:"].includes(url.protocol)
     )
       throw Error(
@@ -159,7 +163,23 @@
     if (!resource || resource !== link) return;
     if (resource.ble) {
       if (!resource.tx) throw Error("Bluetooth command channel is unavailable.");
-      await resource.tx.writeValue(new TextEncoder().encode(text + "\n"));
+      const bytes = new TextEncoder().encode(text + "\n");
+      const write = async () => {
+        if (!resource.device.gatt.connected) return;
+        if (text !== "S" && resource !== link) return;
+        if (/^[FBLR]$/.test(text) && desired !== text) return;
+        let timeout;
+        try {
+          await Promise.race([
+            resource.tx.properties.writeWithoutResponse
+              ? resource.tx.writeValueWithoutResponse(bytes)
+              : resource.tx.writeValueWithResponse(bytes),
+            new Promise((_, reject) => { timeout = setTimeout(() => reject(Error("Bluetooth write timed out.")), 1000); }),
+          ]);
+        } finally { clearTimeout(timeout); }
+      };
+      resource.writes = (resource.writes || Promise.resolve()).catch(() => {}).then(write);
+      await resource.writes;
     } else if (resource.socket) {
       if (
         resource.socket.readyState !== WebSocket.OPEN ||
@@ -191,14 +211,19 @@
       return;
     const resource = link;
     const id = ++sequence;
-    pending = { id, command: direction, sent: performance.now() };
+    pending = resource.ble ? null : { id, command: direction, sent: performance.now() };
     set(
       "#drive-status",
       direction === "S"
         ? "Stop sent…"
         : `${{ F: "Forward", B: "Backward", L: "Left", R: "Right" }[direction]} sent…`,
     );
-    send(`CMD,${id},${direction}`, resource).catch((error) => {
+    send(resource.ble ? direction : `CMD,${id},${direction}`, resource).then(() => {
+      if (resource.ble && resource === link && direction !== "S" && desired === direction) {
+        resource.moved = true;
+        render();
+      }
+    }).catch((error) => {
       if (resource === link) disconnect("Interrupted", error.message);
     });
   }
@@ -234,7 +259,7 @@
   }
   function receive(line, resource) {
     if (resource !== link) return;
-    const packet = parse(line.trim());
+    const packet = parse(line.trim(), resource.ble);
     if (!packet) return;
     if (packet.type === "hello") {
       resource.ready = packet.ready;
@@ -274,7 +299,7 @@
       window.Camera?.connect(config.camera);
       set(
         "#rover-message",
-        "Rover telemetry connected. Camera connection started.",
+        "Rover telemetry connected. Camera is optional and connects separately.",
       );
     }
     render();
@@ -319,8 +344,8 @@
       config = {
         transport: q("#transport").value,
         baud: Number(q("#baud").value),
-        camera: validUrl(q("#camera-url").value, ["http:", "https:"]),
-        ai: validUrl(q("#ai-url").value, ["http:", "https:"]).replace(
+        camera: q("#camera-url").value.trim() ? validUrl(q("#camera-url").value, ["http:", "https:"], false) : "",
+        ai: validUrl(q("#ai-url").value, ["http:", "https:"], false).replace(
           /\/$/,
           "",
         ),
@@ -364,24 +389,40 @@
     set("#rover-message", "Opening connection…");
     try {
       if (config.transport === "ble") {
+        resource.ble = true;
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ services: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"] }],
           optionalServices: ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"],
         });
+        if (resource !== link) return;
         resource.device = device;
         resource.server = await device.gatt.connect();
+        if (resource !== link) { device.gatt.disconnect(); return; }
         const service = await resource.server.getPrimaryService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
         resource.tx = await service.getCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8");
         const rx = await service.getCharacteristic("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
-        await rx.startNotifications();
-        rx.addEventListener("characteristicvaluechanged", (event) => {
-          const text = new TextDecoder().decode(event.target.value);
-          text.split("\\n").filter(Boolean).forEach((line) => receive(line, resource));
-        });
-        device.addEventListener("gattserverdisconnected", () => {
+        resource.rx = rx;
+        const decoder = new TextDecoder();
+        let buffer = "";
+        resource.notify = (event) => {
+          if (resource !== link) return;
+          buffer += decoder.decode(event.target.value, { stream: true });
+          if (buffer.length > 16384) { void disconnect("Interrupted", "Bluetooth telemetry packet too large."); return; }
+          let end;
+          while ((end = buffer.indexOf("\n")) >= 0) {
+            receive(buffer.slice(0, end), resource);
+            buffer = buffer.slice(end + 1);
+          }
+        };
+        resource.onDisconnected = () => {
           if (resource === link) void disconnect("Interrupted", "Bluetooth rover disconnected.");
-        });
-        await send("HELLO", resource);
+        };
+        device.addEventListener("gattserverdisconnected", resource.onDisconnected);
+        rx.addEventListener("characteristicvaluechanged", resource.notify);
+        await rx.startNotifications();
+        if (resource !== link) { device.gatt.disconnect(); return; }
+        resource.ready = true;
+        await send("S", resource);
       } else if (config.transport === "serial") {
         const port = await navigator.serial.requestPort();
         if (resource !== link) return;
@@ -461,7 +502,7 @@
         await disconnect(
           "Interrupted",
           error.name === "NotFoundError"
-            ? "No serial port selected."
+            ? "No compatible device selected. Check that the rover is powered and advertising its BLE service."
             : error.message,
         );
     }
@@ -473,7 +514,7 @@
     const resource = link;
     if (!resource) return;
     // Write STOP before clearing the link; never queue further movement behind it.
-    const stopping = send(`CMD,${++sequence},S`, resource).catch(() => {});
+    const stopping = send(resource.ble ? "S" : `CMD,${++sequence},S`, resource).catch(() => {});
     link = null;
     generation++;
     clearInterval(timer);
@@ -494,7 +535,12 @@
       resource.socket.onmessage = null;
       resource.socket.close();
     }
-    if (resource.device?.gatt?.connected) resource.device.gatt.disconnect();
+    if (resource.device) {
+      await stopping;
+      resource.rx?.removeEventListener("characteristicvaluechanged", resource.notify);
+      if (resource.onDisconnected) resource.device.removeEventListener("gattserverdisconnected", resource.onDisconnected);
+      if (resource.device.gatt.connected) resource.device.gatt.disconnect();
+    }
     if (resource.port) {
       try {
         await stopping;
@@ -560,7 +606,7 @@
     set(
       "#firmware-status",
       enabled
-        ? "Control protocol ready · firmware watchdog reported"
+        ? link.ble ? "BLE commands ready · motor acknowledgement/watchdog not reported" : "Control protocol ready · firmware watchdog reported"
         : "Movement locked: waiting for motors_ready and mira-v1 watchdog handshake.",
     );
     set(
@@ -574,7 +620,7 @@
       !live
         ? "Connect the rover to receive data."
         : !show
-          ? "Readings appear after the first acknowledged movement command."
+          ? "Readings appear after the first movement command."
           : "Readings update with rover telemetry. Missing sensors remain blank.",
     );
     const generated =
