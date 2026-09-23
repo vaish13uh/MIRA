@@ -45,12 +45,9 @@
     q("#camera-detail").textContent = message;
     q("#video-state").textContent = "NO STREAM";
     clearResult("No current visual result.");
+    window.Rover?.endCameraDemo();
   }
   function connect(address) {
-    if (!Rover.connected) {
-      Rover.open();
-      return;
-    }
     disconnect("Connecting rover camera…");
     const token = generation;
     try {
@@ -85,7 +82,8 @@
           readiness = null;
           q("#video-state").textContent = "STREAM RECEIVED";
           q("#camera-detail").textContent =
-            "ESP32-CAM connected · awaiting YOLO analysis";
+            "Camera connected · simulated sensor demo active";
+          window.Rover?.startCameraDemo();
           timer = setInterval(analyse, 1300);
           void analyse();
         } else if (performance.now() - started > 12000)
@@ -282,5 +280,5 @@
   window.addEventListener("pagehide", () => disconnect());
   window.Camera = { connect, disconnect };
   decisions();
-  disconnect("Connect the rover to start the camera.");
+  disconnect("Enter a camera stream address to start the demo.");
 })();

@@ -253,9 +253,7 @@
     }
     if (event.target.closest(".open-camera")) {
       go("live");
-      if (window.Rover?.connected)
-        window.Camera?.connect(window.Rover.cameraUrl);
-      else window.Rover?.open();
+      window.Camera?.connect(document.querySelector("#camera-url").value.trim());
     }
   });
   q("#start-test").onclick = startTest;
