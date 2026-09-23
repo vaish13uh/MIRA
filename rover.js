@@ -591,7 +591,7 @@
   function render() {
     const live = !!link?.live,
       enabled = live && link.ready,
-      show = live && link.moved,
+      show = live,
       cameraDemo = !!link?.cameraDemo;
     q("#connect-rover").disabled = !!link;
     q("#disconnect-rover").disabled = !link;
@@ -658,9 +658,7 @@
         ? "Changing simulated values for the camera demo. CO gas remains 0 ppm."
         : !live
         ? "Connect the rover to receive data."
-        : !show
-          ? "Readings appear after the first movement command."
-          : "Readings update with rover telemetry. Missing sensors remain blank.",
+        : "Readings update with rover telemetry. Missing sensors remain blank.",
     );
     const generated =
       q("#preview-sensors").checked && show
