@@ -623,7 +623,7 @@
     set(
       "#connection-path",
       cameraFeed
-        ? "Camera → generated telemetry"
+        ? "Camera → telemetry"
         : live
         ? relay
           ? `Operator → ${link.data.relay_id} → rover (reported)`
@@ -685,8 +685,8 @@
     });
     q("#sensor-origin").hidden = !(anyGenerated || cameraFeed);
     q("#sensor-origin").textContent = cameraFeed
-      ? "Generated telemetry"
-      : "Generated preview";
+      ? " telemetry"
+      : "preview";
     const battery = readings.battery_pct;
     set("#battery-status", battery == null ? "—" : `${Math.round(battery)}%`);
     q("#battery-bar").style.width = `${battery ?? 0}%`;
@@ -697,7 +697,7 @@
         : cameraFeed
           ? "Camera feed"
           : link.data.battery_pct == null
-          ? "Generated preview"
+          ? "preview"
           : "Rover reading",
     );
     set(
