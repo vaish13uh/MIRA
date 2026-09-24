@@ -601,8 +601,6 @@
     ])
       q(selector).disabled = !!link;
     document.querySelectorAll("[data-drive]").forEach((button) => {
-      if (button.dataset.drive !== "S")
-        button.disabled = !enabled;
       if (!live) button.classList.remove("held");
     });
     set(
@@ -734,12 +732,14 @@
       if (event.button !== 0) return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
+      button.classList.add("held");
       drive(button.dataset.drive);
     };
     button.onpointerup =
       button.onpointercancel =
       button.onlostpointercapture =
         () => {
+          button.classList.remove("held");
           if (desired !== "S") stop();
         };
     button.oncontextmenu = (event) => event.preventDefault();
