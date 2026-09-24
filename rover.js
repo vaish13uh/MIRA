@@ -237,7 +237,7 @@
   }
   function command(direction) {
     if (!link?.live) return;
-    if (direction !== "S" && (!link.ready || !q("#arm-controls").checked))
+    if (direction !== "S" && !link.ready)
       return;
     const resource = link;
     const id = ++sequence;
@@ -262,7 +262,6 @@
       desired !== "S" || (pending?.command !== "S" && !!pending);
     desired = "S";
     heldKey = null;
-    if (disarm) q("#arm-controls").checked = false;
     document
       .querySelectorAll("[data-drive]")
       .forEach((button) => button.classList.remove("held"));
@@ -273,7 +272,6 @@
     if (
       !link?.live ||
       !link.ready ||
-      !q("#arm-controls").checked ||
       ScoutUI.screen !== "live" ||
       document.hidden
     )
@@ -552,7 +550,6 @@
     desired = "S";
     pending = null;
     heldKey = null;
-    q("#arm-controls").checked = false;
     window.Camera?.disconnect();
     Scout.end(status);
     render();
@@ -603,10 +600,9 @@
       "#ai-url",
     ])
       q(selector).disabled = !!link;
-    q("#arm-controls").disabled = !enabled;
     document.querySelectorAll("[data-drive]").forEach((button) => {
       if (button.dataset.drive !== "S")
-        button.disabled = !enabled || !q("#arm-controls").checked;
+        button.disabled = !enabled;
       if (!live) button.classList.remove("held");
     });
     set(
@@ -729,10 +725,6 @@
   q("#disconnect-rover").onclick = () => disconnect();
   q("#preview-sensors").onchange = render;
   q("#obstacle-threshold").onchange = render;
-  q("#arm-controls").onchange = () => {
-    if (!q("#arm-controls").checked) stop();
-    render();
-  };
   document.querySelectorAll("[data-drive]").forEach((button) => {
     button.onpointerdown = (event) => {
       if (button.dataset.drive === "S") {
