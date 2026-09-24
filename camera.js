@@ -45,7 +45,7 @@
     q("#camera-detail").textContent = message;
     q("#video-state").textContent = "NO STREAM";
     clearResult("No current visual result.");
-    window.Rover?.endCamera();
+    window.Rover?.endCameraFeed();
   }
   function connect(address) {
     disconnect("Connecting rover camera…");
@@ -82,8 +82,8 @@
           readiness = null;
           q("#video-state").textContent = "STREAM RECEIVED";
           q("#camera-detail").textContent =
-            "Camera connected ";
-          window.Rover?.startCamera();
+            "Camera connected";
+          window.Rover?.startCameraFeed();
           timer = setInterval(analyse, 1300);
           void analyse();
         } else if (performance.now() - started > 12000)
@@ -280,5 +280,5 @@
   window.addEventListener("pagehide", () => disconnect());
   window.Camera = { connect, disconnect };
   decisions();
-  disconnect("Enter a camera stream address to start .");
+  disconnect("Enter a camera stream address to connect the camera.");
 })();

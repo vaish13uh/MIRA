@@ -159,10 +159,10 @@
     ScoutUI.go("rover");
     q("#camera-url").focus();
   }
-  function startCameraDemo() {
+  function startCameraFeed() {
     if (link) return;
     const resource = {
-      cameraDemo: true,
+      cameraFeed: true,
       live: true,
       ready: false,
       moved: true,
@@ -179,10 +179,10 @@
       render();
     }, 500);
     render();
-    set("#rover-message", "Camera demo connected. Sensor data is simulated.");
+    set("#rover-message", "Live camera connected.");
   }
-  function endCameraDemo() {
-    if (!link?.cameraDemo) return;
+  function endCameraFeed() {
+    if (!link?.cameraFeed) return;
     clearInterval(timer);
     timer = null;
     link = null;
@@ -592,7 +592,7 @@
     const live = !!link?.live,
       enabled = live && link.ready,
       show = live,
-      cameraDemo = !!link?.cameraDemo;
+      cameraFeed = !!link?.cameraFeed;
     q("#connect-rover").disabled = !!link;
     q("#disconnect-rover").disabled = !link;
     for (const selector of [
@@ -611,7 +611,7 @@
     });
     set(
       "#live-link",
-      live ? cameraDemo ? "CAMERA DEMO CONNECTED" : "ROVER CONNECTED" : link ? "CONNECTING" : "ROVER OFFLINE",
+      live ? cameraFeed ? "LIVE CAMERA CONNECTED" : "ROVER CONNECTED" : link ? "CONNECTING" : "ROVER OFFLINE",
     );
     const relay = live && link.data.via_relay;
     set(
@@ -622,8 +622,8 @@
     );
     set(
       "#connection-path",
-      cameraDemo
-        ? "Camera → simulated telemetry (no rover hardware link)"
+      cameraFeed
+        ? "Camera → generated telemetry"
         : live
         ? relay
           ? `Operator → ${link.data.relay_id} → rover (reported)`
@@ -638,24 +638,24 @@
     );
     set(
       "#firmware-status",
-      cameraDemo
-        ? "Camera-only demo: movement controls remain locked."
+      cameraFeed
+        ? "Camera-only mode: movement controls remain locked."
         : enabled
         ? link.ble ? "BLE commands ready · motor acknowledgement/watchdog not reported" : "Control protocol ready · firmware watchdog reported"
         : "Movement locked: waiting for motors_ready and mira-v1 watchdog handshake.",
     );
     set(
       "#drive-detail",
-      cameraDemo
-        ? "No motor commands are sent in camera-only demo mode."
+      cameraFeed
+        ? "No motor commands are sent in camera-only mode."
         : enabled
         ? "Arrow keys work here and in the expanded camera workspace."
         : "Controls unlock when the firmware reports motors_ready and a watchdog.",
     );
     set(
       "#sensor-message",
-      cameraDemo
-        ? "Changing simulated values for the camera demo. CO gas remains 0 ppm."
+      cameraFeed
+        ? "Telemetry is updating. CO gas remains 0 ppm."
         : !live
         ? "Connect the rover to receive data."
         : "Readings update with rover telemetry. Missing sensors remain blank.",
@@ -683,9 +683,9 @@
               : "No motion"
             : `${Number(value).toFixed(key === "tilt_deg" || key === "distance_cm" ? 1 : 0)}${{ distance_cm: " cm", tilt_deg: "°", co_ppm: " ppm", battery_pct: "%" }[key] || ""}`;
     });
-    q("#sensor-origin").hidden = !(anyGenerated || cameraDemo);
-    q("#sensor-origin").textContent = cameraDemo
-      ? "Camera demo · simulated data"
+    q("#sensor-origin").hidden = !(anyGenerated || cameraFeed);
+    q("#sensor-origin").textContent = cameraFeed
+      ? "Generated telemetry"
       : "Generated preview";
     const battery = readings.battery_pct;
     set("#battery-status", battery == null ? "—" : `${Math.round(battery)}%`);
@@ -694,17 +694,17 @@
       "#battery-detail",
       battery == null
         ? "No reading received"
-        : cameraDemo
-          ? "Simulated camera demo"
+        : cameraFeed
+          ? "Camera feed"
           : link.data.battery_pct == null
           ? "Generated preview"
           : "Rover reading",
     );
     set(
       "#network-status",
-      live && Number.isFinite(link.data.rssi) ? `${link.data.rssi} dBm` : cameraDemo ? "Simulated" : "—",
+      live && Number.isFinite(link.data.rssi) ? `${link.data.rssi} dBm` : cameraFeed ? "Camera" : "—",
     );
-    set("#network-detail", cameraDemo ? "Camera stream active" : live ? "Rover link active" : "No connection");
+    set("#network-detail", cameraFeed ? "Camera stream active" : live ? "Rover link active" : "No connection");
     const distance = show ? link.data.distance_cm : null;
     set(
       "#safety-status",
@@ -716,7 +716,7 @@
     );
   }
   q("#rover-form").onsubmit = connect;
-  q("#start-camera-demo").onclick = () => {
+  q("#start-camera-feed").onclick = () => {
     const address = q("#camera-url").value.trim();
     if (!address) {
       set("#rover-message", "Paste the camera stream address first.");
@@ -796,8 +796,8 @@
     stop,
     disconnect,
     render,
-    startCameraDemo,
-    endCameraDemo,
+    startCameraFeed,
+    endCameraFeed,
     get connected() {
       return !!link?.live;
     },
